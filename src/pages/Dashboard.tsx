@@ -5,6 +5,7 @@ import SummaryCard from '../components/dashboard/SummaryCard';
 import RecentReferrals from '../components/dashboard/RecentReferrals';
 import DistributionChart from '../components/dashboard/DistributionChart';
 import CommissionSummary from '../components/dashboard/CommissionSummary';
+import MemberCommissions from '../components/dashboard/MemberCommissions';
 
 const Dashboard: React.FC = () => {
   const { companies, members, referrals, commissions, areas } = useApp();
@@ -57,6 +58,10 @@ const Dashboard: React.FC = () => {
         
         <div>
           <DistributionChart areas={areas} />
+        </div>
+
+        <div>
+          <MemberCommissions />
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">

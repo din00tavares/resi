@@ -3,11 +3,14 @@ import { useApp } from '../../context/AppContext';
 import { Card, CardHeader, CardBody } from '../ui/Card';
 
 const CommissionSummary: React.FC = () => {
-  const { commissions } = useApp();
+  const { commissions, referrals } = useApp();
   
   const summary = useMemo(() => {
-    // Comissões pendentes (não realizadas)
-    const pendingCommissions = commissions.filter(c => !c.isRealized);
+    // Comissões pendentes (não realizadas e não canceladas)
+    const pendingCommissions = commissions.filter(c => {
+      const referral = referrals.find(r => r.id === c.referralId);
+      return !c.isRealized && referral?.status !== 'cancelled';
+    });
     const totalPendingValue = pendingCommissions.reduce((sum, c) => sum + c.totalAmount, 0);
     
     // Comissões recebidas (realizadas)
@@ -19,7 +22,7 @@ const CommissionSummary: React.FC = () => {
       totalPendingValue,
       totalReceivedValue
     };
-  }, [commissions]);
+  }, [commissions, referrals]);
   
   return (
     <Card>
@@ -54,14 +57,21 @@ const CommissionSummary: React.FC = () => {
             
             <div className="space-y-3">
               <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Parceiro</span>
+                <span className="font-medium">
+                  {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                    .format(summary.totalReceivedValue * 0.5)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">RESI</span>
                 <span className="font-medium">
                   {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-                    .format(summary.totalReceivedValue)}
+                    .format(summary.totalReceivedValue * 0.5)}
                 </span>
               </div>
               <p className="text-xs text-gray-500">
-                Valor distribuído igualmente entre as 5 áreas da cooperativa
+                Valor da RESI distribuído igualmente entre as 5 áreas da cooperativa
               </p>
             </div>
           </div>

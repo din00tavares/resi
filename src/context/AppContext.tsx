@@ -198,13 +198,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const company = companies.find(c => c.id === referral.companyId);
     if (company) {
       const totalCommission = referral.value * (company.commissionPercentage / 100);
+      const memberAmount = totalCommission * 0.5; // 50% para o parceiro
+      const resiAmount = totalCommission * 0.5; // 50% para a RESI
       
       const newCommission: Commission = {
         id: uuidv4(),
         referralId: id,
         totalAmount: totalCommission,
-        memberAmount: 0,
-        resiAmount: totalCommission,
+        memberAmount: memberAmount,
+        resiAmount: resiAmount,
         isRealized: false, // Começa como não realizado
         calculatedAt: new Date()
       };
@@ -235,14 +237,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 : c
             );
 
-            // Distribui o valor entre as áreas
+            // Distribui o valor da RESI entre as áreas
             const commission = updatedCommissions.find(c => c.referralId === id);
             if (commission) {
+              const resiAmount = commission.totalAmount * 0.5; // 50% para RESI
               setAreas(prevAreas => {
-                const areaAmount = commission.totalAmount / prevAreas.length;
+                const areaAmount = resiAmount / prevAreas.length; // Distribui apenas a parte da RESI
                 return prevAreas.map(area => ({
                   ...area,
                   balance: area.balance + areaAmount
+                }));
+              });
+            }
+
+            return updatedCommissions;
+          });
+        }
+        
+        // Se mudou para cancelado, abate o valor da comissão se já estiver realizado
+        if (newStatus === 'cancelled') {
+          setCommissions(prevCommissions => {
+            const updatedCommissions = prevCommissions.map(c => 
+              c.referralId === id 
+                ? { ...c, isRealized: false }
+                : c
+            );
+
+            // Abate o valor da RESI das áreas se a comissão estava realizada
+            const commission = updatedCommissions.find(c => c.referralId === id);
+            if (commission && r.status === 'completed') {
+              const resiAmount = commission.totalAmount * 0.5; // 50% para RESI
+              setAreas(prevAreas => {
+                const areaAmount = resiAmount / prevAreas.length; // Abate a parte da RESI
+                return prevAreas.map(area => ({
+                  ...area,
+                  balance: area.balance - areaAmount
                 }));
               });
             }
